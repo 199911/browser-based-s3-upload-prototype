@@ -1,3 +1,9 @@
+require('dotenv').config();
+
+const { BUCKET_REGION, BUCKET_NAME } = process.env;
+
+console.log({ BUCKET_REGION, BUCKET_NAME })
+
 const express = require('express');
 const bodyParser = require('body-parser');
 
