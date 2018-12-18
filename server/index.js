@@ -13,17 +13,26 @@ const app = express();
 // parse body params and attach them to req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
-app.post('/put-object-urls', (req, res) => {
-  // We may set `Expire` for security reason
-  const params = { Bucket: BUCKET_NAME, Key: 'signed-put-object', Expires: 60 };
-  s3.getSignedUrl(
-    'putObject',
-    params,
-    (err, url) => {
-      res.json({ url });
-    }
-  );
-});
+app
+  // Pre-flight request
+  .options('/put-object-urls', (req, res, next) => {
+    res.set('Access-Control-Allow-Origin', '*');
+    res.set("Access-Control-Allow-Headers", "Content-Type");
+    next()
+  })
+  .post('/put-object-urls', (req, res) => {
+    // We may set `Expire` for security reason
+    const params = { Bucket: BUCKET_NAME, Key: 'signed-put-object', Expires: 60 };
+    s3.getSignedUrl(
+      'putObject',
+      params,
+      (err, url) => {
+        res
+          .set('Access-Control-Allow-Origin', '*')
+          .json({ url });
+      }
+    );
+  });
 
 app.listen(
   3001,

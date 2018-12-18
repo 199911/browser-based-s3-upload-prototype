@@ -13,11 +13,23 @@ class FileInput extends Component {
 
   handleSubmit(event) {
     event.preventDefault();
-    alert(
-      `Selected file - ${
-        this.fileInput.current.files[0].name
-      }`
-    );
+    // Get signed url
+    fetch(
+      '//localhost:3001/put-object-urls',
+      {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      }
+    )
+       // parses response to JSON
+      .then(response => response.json())
+      .then((data) => {
+        console.log(data);
+        // Send request
+      });
   }
 
   render() {
