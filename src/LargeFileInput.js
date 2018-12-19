@@ -18,15 +18,18 @@ class LargeFileInput extends Component {
   async handleSubmit(event) {
     event.preventDefault();
 
-    const file = this.fileInput.current.files[0];
-    const size = file.size;
+    const largeFile = this.fileInput.current.files[0];
+    const size = largeFile.size;
 
-    // Chunk the file
+    // Chunk the largeFile
     const parts = [];
     let start = 0;
     let end = sliceSize;
     while(start < size) {
-      parts.push(file.slice(start, end));
+      parts.push({
+        file: largeFile.slice(start, end),
+        isUploaded: false,
+      });
       start = end;
       end += sliceSize;
     }
@@ -72,19 +75,27 @@ class LargeFileInput extends Component {
       const result = await fetch(url, {
         // signed put-object url must be triggered by PUT method
         method: 'PUT',
-        body: part,
+        body: part.file,
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
-      if (result.ok) {
-        console.log(await result.text());
-      } else {
-        throw new Error(`Failure: part ${partNum}`);
+
+      if (!result.ok) {
+        console.log(`Failure: part ${partNum}`);
       }
+      part.isUploaded = result.ok;
     });
 
+    const timerId = setInterval(
+      () => { console.log(parts); },
+      3000,
+    );
+
     await Promise.all(promises);
+
+    clearInterval(timerId);
+
     // Complete multipart upload
     await fetch(
       `//localhost:3001/uploads/${uploadId}`,
