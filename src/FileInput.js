@@ -12,10 +12,11 @@ class FileInput extends Component {
     this.fileInput = React.createRef();
   }
 
-  handleSubmit(event) {
+  async handleSubmit(event) {
     event.preventDefault();
+
     // Get signed url
-    fetch(
+    const response = await fetch(
       '//localhost:3001/put-object-urls',
       {
         method: "POST",
@@ -25,28 +26,27 @@ class FileInput extends Component {
         },
       }
     )
-       // parses response to JSON
-      .then(response => response.json())
-      .then(({ url }) => {
-        // Send request
-        const file = this.fileInput.current.files[0];
-        fetch(url, {
-          // signed put-object url must be triggered by PUT method
-          method: 'PUT',
-          body: file,
-          headers: {
-            'Content-Type': 'multipart/form-data'
-          }
-        })
-          .then(res => {
-            if(res.ok) {
-              console.log('success');
-              console.log('res is',res);
-            } else {
-              console.log('error');
-            }
-          });
-      });
+      // parses response to JSON
+      .then(response => response.json());
+
+    const { url } = response;
+    console.log(url);
+
+    // Send request
+    const file = this.fileInput.current.files[0];
+    const result = await fetch(url, {
+      // signed put-object url must be triggered by PUT method
+      method: 'PUT',
+      body: file,
+      headers: {
+        'Content-Type': 'multipart/form-data'
+      }
+    });
+    if (result.ok) {
+      console.log('Success');
+    } else {
+      console.log('Failure');
+    }
   }
 
   render() {
