@@ -47,6 +47,7 @@ class LargeFileInput extends Component {
       // parses response to JSON
       .then(response => response.json());
 
+    console.log(response);
     const { UploadId: uploadId } = response;
 
     // TODO: Re-try logic
@@ -83,8 +84,18 @@ class LargeFileInput extends Component {
       }
     });
 
-    Promise.all(promises);
-
+    await Promise.all(promises);
+    // Complete multipart upload
+    await fetch(
+      `//localhost:3001/uploads/${uploadId}`,
+      {
+        method: "POST",
+        mode: "cors",
+        headers: {
+          "Content-Type": "application/json; charset=utf-8",
+        },
+      }
+    );
   }
 
   render() {
