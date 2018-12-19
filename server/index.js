@@ -14,12 +14,15 @@ const app = express();
 // parse body params and attach them to req.body
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
+
+// S3 put object
 app
   // Pre-flight request
   .options('/put-object-urls', (req, res, next) => {
-    res.set('Access-Control-Allow-Origin', '*');
-    res.set("Access-Control-Allow-Headers", "Content-Type");
-    next()
+    res
+      .set('Access-Control-Allow-Origin', '*')
+      .set("Access-Control-Allow-Headers", "Content-Type")
+      .end();
   })
   .post('/put-object-urls', (req, res) => {
     // We may set `Expire` for security reason
@@ -37,6 +40,32 @@ app
           .json({ url });
       }
     );
+  });
+
+// S3 multipart upload
+app
+  // Pre-flight request
+  .options('/uploads(/*)?', (req, res, next) => {
+    res
+      .set('Access-Control-Allow-Origin', '*')
+      .set("Access-Control-Allow-Headers", "Content-Type")
+      .end();
+  })
+  // Create multipart upload
+  .post('/uploads', async (req, res) => {
+    const multipart = await s3
+      .createMultipartUpload({
+        Bucket: BUCKET_NAME,
+        Key: 'poc/signed-multipart-upload',
+        // The expires field do nothing about multipart abort
+        // We need to set up Aborting Incomplete Multipart Uploads Bucket Lifecycle Policy
+        // https://github.com/aws/aws-sdk-js/issues/1959
+        Expires: 60
+      })
+      .promise();
+    res
+      .set('Access-Control-Allow-Origin', '*')
+      .json(multipart);
   });
 
 app.listen(
