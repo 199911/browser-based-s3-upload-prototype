@@ -24,11 +24,14 @@ app
   .post('/put-object-urls', (req, res) => {
     // We may set `Expire` for security reason
     // Need to be careful if we get object key from user
-    const params = { Bucket: BUCKET_NAME, Key: 'poc/signed-put-object', Expires: 600 };
+    const params = { Bucket: BUCKET_NAME, Key: 'poc/signed-put-object', Expires: 5 };
     s3.getSignedUrl(
       'putObject',
       params,
       (err, url) => {
+        if (err) {
+          console.log(err);
+        }
         res
           .set('Access-Control-Allow-Origin', '*')
           .json({ url });
