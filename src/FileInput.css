@@ -1,0 +1,20 @@
+.FileInput {
+  display: table;
+  margin: 10px auto;
+  padding: 10px;
+  border: 6px solid grey;
+  text-align: left;
+}
+
+.FileInput div {
+    display: table-row;
+}
+
+.FileInput label, input {
+    display: table-cell;
+    padding-bottom: 10px;
+}
+
+.FileInput label {
+    padding-right: 10px;
+}

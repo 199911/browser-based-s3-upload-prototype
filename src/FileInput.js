@@ -3,6 +3,7 @@
  */
 
 import React, { Component } from 'react';
+import './FileInput.css';
 
 class FileInput extends Component {
   constructor(props) {
@@ -50,13 +51,16 @@ class FileInput extends Component {
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
-        <label>
-          Upload file:
+      <form className="FileInput" onSubmit={this.handleSubmit}>
+        <div>
+          <label>
+            Upload file:
+          </label>
           <input type="file" ref={this.fileInput} />
-        </label>
-        <br />
-        <button type="submit">Submit</button>
+        </div>
+        <div>
+          <input type="submit" value="Submit" />
+        </div>
       </form>
     );
   }
