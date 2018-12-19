@@ -3,6 +3,7 @@ import logo from './logo.svg';
 import './App.css';
 
 import FileInput from './FileInput.js';
+import LargeFileInput from './LargeFileInput.js';
 
 class App extends Component {
   render() {
@@ -13,6 +14,7 @@ class App extends Component {
         </header>
         <main>
           <FileInput />
+          <LargeFileInput />
         </main>
       </div>
     );
