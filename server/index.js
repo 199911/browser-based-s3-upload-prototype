@@ -51,7 +51,7 @@ app
       .set("Access-Control-Allow-Headers", "Content-Type")
       .end();
   })
-  // Create multipart upload
+  // Init upload
   .post('/uploads', async (req, res) => {
     const multipart = await s3
       .createMultipartUpload({
@@ -67,7 +67,36 @@ app
       .set('Access-Control-Allow-Origin', '*')
       .json(multipart);
   })
-  // Get multipart part upload signed URL
+  // Complete upload
+  .post('/uploads/:uploadId', async (req, res) => {
+    const { uploadId } = req.params;
+
+    // List parts
+    const response = await s3
+      .listParts({
+        Bucket: BUCKET_NAME,
+        Key: 'poc/signed-multipart-upload',
+        UploadId: uploadId,
+      })
+      .promise();
+    const parts = response.Parts.map(({ETag,PartNumber}) => ({ETag,PartNumber}));
+    console.log(parts);
+
+    const data = await s3.completeMultipartUpload({
+      Bucket: BUCKET_NAME,
+      Key: 'poc/signed-multipart-upload',
+      MultipartUpload: {
+        // Parts is in format of [{ETag,PartNumber}, ..]
+        Parts: parts,
+      },
+      UploadId: uploadId,
+    })
+      .promise();
+    res
+      .set('Access-Control-Allow-Origin', '*')
+      .json(data);
+  })
+  // Get part upload signed URL
   .post('/uploads/:uploadId/parts/:partNum', (req, res) => {
     const { uploadId, partNum } = req.params;
     // We may set `Expire` for security reason
