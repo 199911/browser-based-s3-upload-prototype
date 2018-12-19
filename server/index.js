@@ -6,6 +6,7 @@ const AWS = require("aws-sdk");
 const { BUCKET_REGION, BUCKET_NAME } = process.env;
 const s3 = new AWS.S3({
   region: BUCKET_REGION,
+  signatureVersion: 'v4',
 });
 
 const app = express();
@@ -22,7 +23,8 @@ app
   })
   .post('/put-object-urls', (req, res) => {
     // We may set `Expire` for security reason
-    const params = { Bucket: BUCKET_NAME, Key: 'signed-put-object', Expires: 60 };
+    // Need to be careful if we get object key from user
+    const params = { Bucket: BUCKET_NAME, Key: 'poc/signed-put-object', Expires: 600 };
     s3.getSignedUrl(
       'putObject',
       params,
