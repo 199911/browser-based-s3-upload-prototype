@@ -66,6 +66,31 @@ app
     res
       .set('Access-Control-Allow-Origin', '*')
       .json(multipart);
+  })
+  // Get multipart part upload signed URL
+  .post('/uploads/:uploadId/parts/:partNum', (req, res) => {
+    const { uploadId, partNum } = req.params;
+    // We may set `Expire` for security reason
+    // Need to be careful if we get object key from user
+    const params = {
+      Bucket: BUCKET_NAME,
+      Key: 'poc/signed-multipart-upload',
+      PartNumber: partNum,
+      UploadId: uploadId,
+      Expires: 60,
+    };
+    s3.getSignedUrl(
+      'uploadPart',
+      params,
+      (err, url) => {
+        if (err) {
+          console.log(err);
+        }
+        res
+          .set('Access-Control-Allow-Origin', '*')
+          .json({ url });
+      }
+    );
   });
 
 app.listen(
