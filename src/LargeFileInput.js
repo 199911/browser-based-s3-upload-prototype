@@ -60,7 +60,7 @@ class LargeFileInput extends Component {
 
     // Init upload process
     const response = await fetch(
-      '//localhost:3001/uploads',
+      '/uploads',
       {
         method: "POST",
         mode: "cors",
@@ -90,7 +90,7 @@ class LargeFileInput extends Component {
           let url;
           try {
             const response = await fetch(
-              `//localhost:3001/uploads/${uploadId}/parts/${partNum}`,
+              `/uploads/${uploadId}/parts/${partNum}`,
               {
                 method: "POST",
                 mode: "cors",
@@ -160,7 +160,7 @@ class LargeFileInput extends Component {
 
     // Complete multipart upload
     const { Location } = await fetch(
-      `//localhost:3001/uploads/${uploadId}`,
+      `/uploads/${uploadId}`,
       {
         method: "POST",
         mode: "cors",
