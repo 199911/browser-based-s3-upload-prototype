@@ -24,7 +24,7 @@ class LargeFileInput extends Component {
 
   updateProgress(parts) {
     const progress = parts.map(
-      ({ isUploaded }) => ({ isUploaded })
+      ({ isUploaded, message }) => ({ isUploaded, message })
     );
     this.setState({ progress });
   }
@@ -54,7 +54,7 @@ class LargeFileInput extends Component {
 
     const timerId = setInterval(
       () => { this.updateProgress(parts); },
-      3000,
+      1000,
     );
 
     // Init upload process
@@ -84,42 +84,67 @@ class LargeFileInput extends Component {
         .map(async (part) => {
           // Get signed upload part url
           const partNum = part.sequence;
-          const { url } = await fetch(
-            `//localhost:3001/uploads/${uploadId}/parts/${partNum}`,
-            {
-              method: "POST",
-              mode: "cors",
-              headers: {
-                "Content-Type": "application/json; charset=utf-8",
-              },
+          let url;
+          try {
+            const response = await fetch(
+              `//localhost:3001/uploads/${uploadId}/parts/${partNum}`,
+              {
+                method: "POST",
+                mode: "cors",
+                headers: {
+                  "Content-Type": "application/json; charset=utf-8",
+                },
+              }
+            )
+              // parses response to JSON
+              .then(response => response.json());
+            url = response.url;
+          } catch (e) {
+            return {
+              sequence: partNum,
+              message: "Fail to get signed URL",
             }
-          )
-            // parses response to JSON
-            .then(response => response.json());
+          }
 
           // Upload part
-          const result = await fetch(url, {
-            // signed put-object url must be triggered by PUT method
-            method: 'PUT',
-            body: part.file,
-            headers: {
-              'Content-Type': 'multipart/form-data'
-            }
-          });
+          try {
+            const result = await fetch(url, {
+              // signed put-object url must be triggered by PUT method
+              method: 'PUT',
+              body: part.file,
+              headers: {
+                'Content-Type': 'multipart/form-data'
+              }
+            });
 
-          if (!result.ok) {
-            console.log(`Failure: part ${partNum}`);
+            if (!result.ok) {
+              console.log(`Failure: part ${partNum}`);
+            }
+            part.isUploaded = result.ok;
+          } catch (e) {
+            return {
+              sequence: partNum,
+              message: "Fail to upload parts",
+            };
           }
-          part.isUploaded = result.ok;
+          // Does not return anything when success
         });
-      try {
-        await Promise.all(promises);
-      } catch (err) {
+
+      const results = await Promise.all(promises);
+      const failures = _.compact(results);
+      if (failures.length > 0) {
         console.log(`Some parts fail to uplaod`);
-        console.log(err);
-        // Wait 5 second before retry
+        failures.forEach(({sequence, message}) => {
+          console.log({sequence, message});
+          const part = _.find(parts, (p) => p.sequence === sequence);
+          console.log(part);
+          if (part) {
+            part.message = message;
+          }
+        })
         await Promise.delay(5000);
       }
+      console.log(failures);
 
       incompletedParts = _.filter(parts, p => !p.isUploaded);
       isCompleted = incompletedParts.length === 0;

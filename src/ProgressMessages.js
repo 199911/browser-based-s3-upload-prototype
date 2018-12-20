@@ -16,6 +16,10 @@ class ProgressMessages extends Component {
             return (
               <p key={ `${index + 1}` }>
                 { `Part #${index + 1}: ${part.isUploaded ? 'done' : 'waiting'}` }
+                <br/>
+                <small style={{ color: 'red' }}>
+                  { part.message }
+                </small>
               </p>
             );
           })
