@@ -4,7 +4,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const AWS = require("aws-sdk");
 
-const { BUCKET_REGION, BUCKET_NAME } = process.env;
+const { PORT, BUCKET_REGION, BUCKET_NAME } = process.env;
 const s3 = new AWS.S3({
   region: BUCKET_REGION,
   signatureVersion: 'v4',
@@ -129,6 +129,6 @@ app
   });
 
 app.listen(
-  3001,
+  PORT,
   () => console.log('Server started'),
 );
