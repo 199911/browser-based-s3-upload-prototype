@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const bodyParser = require('body-parser');
 const AWS = require("aws-sdk");
@@ -10,6 +11,8 @@ const s3 = new AWS.S3({
 });
 
 const app = express();
+
+app.use(express.static(path.join(__dirname, '../build')));
 
 // parse body params and attach them to req.body
 app.use(bodyParser.json());
