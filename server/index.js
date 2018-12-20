@@ -60,7 +60,10 @@ app
         // The expires field do nothing about multipart abort
         // We need to set up Aborting Incomplete Multipart Uploads Bucket Lifecycle Policy
         // https://github.com/aws/aws-sdk-js/issues/1959
-        Expires: 60
+        Expires: 60,
+        // Set ACL to public read is for POC only
+        // Never set ACL to public in production code
+        ACL: `public-read`,
       })
       .promise();
     res

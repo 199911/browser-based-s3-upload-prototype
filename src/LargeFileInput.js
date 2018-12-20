@@ -17,6 +17,7 @@ class LargeFileInput extends Component {
     super(props);
     this.state = {
       progress: [],
+      uploadedUri: false,
     };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.fileInput = React.createRef();
@@ -158,7 +159,7 @@ class LargeFileInput extends Component {
     this.updateProgress(parts);
 
     // Complete multipart upload
-    await fetch(
+    const { Location } = await fetch(
       `//localhost:3001/uploads/${uploadId}`,
       {
         method: "POST",
@@ -167,13 +168,19 @@ class LargeFileInput extends Component {
           "Content-Type": "application/json; charset=utf-8",
         },
       }
-    );
+    )
+      // parses response to JSON
+      .then(response => response.json());
+    this.setState({ uploadedUri: Location });
   }
 
   render() {
-    const { progress } = this.state;
+    const { progress, uploadedUri } = this.state;
     return (
       <form className="LargeFileInput" onSubmit={this.handleSubmit}>
+        {
+          uploadedUri && <div><a href={uploadedUri}>Download Uploaded File</a></div>
+        }
         <div>
           <label>
             Upload Large file:
