@@ -2,6 +2,7 @@
  * Reference: https://reactjs.org/docs/uncontrolled-components.html#the-file-input-tag
  */
 
+import Promise from 'bluebird';
 import _ from 'lodash';
 import React, { Component } from 'react';
 import './LargeFileInput.css';
@@ -57,8 +58,6 @@ class LargeFileInput extends Component {
     console.log(response);
     const { UploadId: uploadId } = response;
 
-    // TODO: Re-try logic
-    // TODO: Limit the number of parallel upload, avoid timeout problem
     let incompletedParts = parts;
     let isCompleted = false;
     while (!isCompleted) {
@@ -97,8 +96,14 @@ class LargeFileInput extends Component {
           }
           part.isUploaded = result.ok;
         });
-
-      await Promise.all(promises);
+      try {
+        await Promise.all(promises);
+      } catch (err) {
+        console.log(`Some parts fail to uplaod`);
+        console.log(err);
+        // Wait 5 second before retry
+        await Promise.delay(5000);
+      }
 
       incompletedParts = _.filter(parts, p => !p.isUploaded);
       isCompleted = incompletedParts.length === 0;
