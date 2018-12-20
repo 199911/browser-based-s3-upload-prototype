@@ -24,7 +24,7 @@ class LargeFileInput extends Component {
 
   updateProgress(parts) {
     const progress = parts.map(
-      ({ isUploaded, message }) => ({ isUploaded, message })
+      ({ status, message }) => ({ status, message })
     );
     this.setState({ progress });
   }
@@ -44,7 +44,7 @@ class LargeFileInput extends Component {
       parts.push({
         file: largeFile.slice(start, end),
         sequence,
-        isUploaded: false,
+        status: 'Pending',
       });
       start = end;
       end += sliceSize;
@@ -120,7 +120,7 @@ class LargeFileInput extends Component {
             if (!result.ok) {
               console.log(`Failure: part ${partNum}`);
             }
-            part.isUploaded = result.ok;
+            part.status = result.ok ? 'Done' : 'Error';
           } catch (e) {
             return {
               sequence: partNum,
@@ -146,7 +146,7 @@ class LargeFileInput extends Component {
       }
       console.log(failures);
 
-      incompletedParts = _.filter(parts, p => !p.isUploaded);
+      incompletedParts = _.filter(parts, p => p.status !== 'Done');
       isCompleted = incompletedParts.length === 0;
       console.log(incompletedParts);
     }

@@ -5,7 +5,7 @@ class ProgressMessages extends Component {
   render() {
     const { progress } = this.props;
     const total = progress.length;
-    const done = progress.filter(p => p.isUploaded).length;
+    const done = progress.filter(p => p.status === 'Done').length;
     return (
       <>
         <h2>
@@ -15,7 +15,7 @@ class ProgressMessages extends Component {
           progress.map((part, index) => {
             return (
               <p key={ `${index + 1}` }>
-                { `Part #${index + 1}: ${part.isUploaded ? 'done' : 'waiting'}` }
+                { `Part #${index + 1}: ${part.status}` }
                 <br/>
                 <small style={{ color: 'red' }}>
                   { part.message }
