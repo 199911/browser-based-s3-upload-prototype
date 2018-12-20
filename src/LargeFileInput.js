@@ -84,6 +84,8 @@ class LargeFileInput extends Component {
         .map(async (part) => {
           // Get signed upload part url
           const partNum = part.sequence;
+          part.status = 'Uploading';
+          part.message = false;
           let url;
           try {
             const response = await fetch(
@@ -139,6 +141,7 @@ class LargeFileInput extends Component {
           const part = _.find(parts, (p) => p.sequence === sequence);
           console.log(part);
           if (part) {
+            part.status = 'Error';
             part.message = message;
           }
         })
