@@ -2,11 +2,12 @@
  * Reference: https://reactjs.org/docs/uncontrolled-components.html#the-file-input-tag
  */
 
+import _ from 'lodash';
 import React, { Component } from 'react';
 import './LargeFileInput.css';
 
-// Set size of each chunk to 64 MB
-const sliceSize = 64 * 1024 * 1024;
+// Set size of each chunk to 32 MB
+const sliceSize = 32 * 1024 * 1024;
 
 class LargeFileInput extends Component {
   constructor(props) {
@@ -25,13 +26,16 @@ class LargeFileInput extends Component {
     const parts = [];
     let start = 0;
     let end = sliceSize;
+    let sequence = 1;
     while(start < size) {
       parts.push({
         file: largeFile.slice(start, end),
+        sequence,
         isUploaded: false,
       });
       start = end;
       end += sliceSize;
+      sequence += 1;
     }
 
     console.log(parts);
@@ -55,46 +59,51 @@ class LargeFileInput extends Component {
 
     // TODO: Re-try logic
     // TODO: Limit the number of parallel upload, avoid timeout problem
-    const promises = parts.map(async (part, index) => {
-      // Get signed upload part url
-      const partNum = index + 1;
-      const { url } = await fetch(
-        `//localhost:3001/uploads/${uploadId}/parts/${partNum}`,
-        {
-          method: "POST",
-          mode: "cors",
-          headers: {
-            "Content-Type": "application/json; charset=utf-8",
-          },
-        }
-      )
-        // parses response to JSON
-        .then(response => response.json());
+    let incompletedParts = parts;
+    let isCompleted = false;
+    while (!isCompleted) {
+      // Upload at most 3 parts parallelly
+      const promises = _
+        .chain(incompletedParts)
+        .slice(0, 3)
+        .map(async (part) => {
+          // Get signed upload part url
+          const partNum = part.sequence;
+          const { url } = await fetch(
+            `//localhost:3001/uploads/${uploadId}/parts/${partNum}`,
+            {
+              method: "POST",
+              mode: "cors",
+              headers: {
+                "Content-Type": "application/json; charset=utf-8",
+              },
+            }
+          )
+            // parses response to JSON
+            .then(response => response.json());
 
-      // Upload part
-      const result = await fetch(url, {
-        // signed put-object url must be triggered by PUT method
-        method: 'PUT',
-        body: part.file,
-        headers: {
-          'Content-Type': 'multipart/form-data'
-        }
-      });
+          // Upload part
+          const result = await fetch(url, {
+            // signed put-object url must be triggered by PUT method
+            method: 'PUT',
+            body: part.file,
+            headers: {
+              'Content-Type': 'multipart/form-data'
+            }
+          });
 
-      if (!result.ok) {
-        console.log(`Failure: part ${partNum}`);
-      }
-      part.isUploaded = result.ok;
-    });
+          if (!result.ok) {
+            console.log(`Failure: part ${partNum}`);
+          }
+          part.isUploaded = result.ok;
+        });
 
-    const timerId = setInterval(
-      () => { console.log(parts); },
-      3000,
-    );
+      await Promise.all(promises);
 
-    await Promise.all(promises);
-
-    clearInterval(timerId);
+      incompletedParts = _.filter(parts, p => !p.isUploaded);
+      isCompleted = incompletedParts.length === 0;
+      console.log(incompletedParts);
+    }
 
     // Complete multipart upload
     await fetch(
