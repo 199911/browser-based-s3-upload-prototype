@@ -7,14 +7,26 @@ import _ from 'lodash';
 import React, { Component } from 'react';
 import './LargeFileInput.css';
 
+import ProgressMessages from './ProgressMessages.js';
+
 // Set size of each chunk to 32 MB
 const sliceSize = 32 * 1024 * 1024;
 
 class LargeFileInput extends Component {
   constructor(props) {
     super(props);
+    this.state = {
+      progress: [],
+    };
     this.handleSubmit = this.handleSubmit.bind(this);
     this.fileInput = React.createRef();
+  }
+
+  updateProgress(parts) {
+    const progress = parts.map(
+      ({ isUploaded }) => ({ isUploaded })
+    );
+    this.setState({ progress });
   }
 
   async handleSubmit(event) {
@@ -39,7 +51,11 @@ class LargeFileInput extends Component {
       sequence += 1;
     }
 
-    console.log(parts);
+
+    const timerId = setInterval(
+      () => { this.updateProgress(parts); },
+      3000,
+    );
 
     // Init upload process
     const response = await fetch(
@@ -110,6 +126,9 @@ class LargeFileInput extends Component {
       console.log(incompletedParts);
     }
 
+    clearInterval(timerId);
+    this.updateProgress(parts);
+
     // Complete multipart upload
     await fetch(
       `//localhost:3001/uploads/${uploadId}`,
@@ -124,6 +143,7 @@ class LargeFileInput extends Component {
   }
 
   render() {
+    const { progress } = this.state;
     return (
       <form className="LargeFileInput" onSubmit={this.handleSubmit}>
         <div>
@@ -135,6 +155,7 @@ class LargeFileInput extends Component {
         <div>
           <input type="submit" value="Submit" />
         </div>
+        <ProgressMessages progress={progress} />
       </form>
     );
   }
